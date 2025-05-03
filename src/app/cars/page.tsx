@@ -42,16 +42,11 @@ export default function CarsPage() {
         const carsData = await carsResponse.json();
         const photosData = await photosResponse.json();
 
-        // Match photos with cars based on the photo key containing the car ID
-        const carsWithPhotos = carsData.map((car: Car) => {
-          const matchingPhoto = photosData.find((photo: Photo) => 
-            photo.key.includes(car.id.toString())
-          );
-          return {
-            ...car,
-            photo: matchingPhoto
-          };
-        });
+        // Match photos with cars based on their order
+        const carsWithPhotos = carsData.map((car: Car, index: number) => ({
+          ...car,
+          photo: photosData[index]
+        }));
 
         setCars(carsWithPhotos);
       } catch (err) {
