@@ -12,7 +12,7 @@ interface Car {
   make: string;
   model: string;
   first_year_produced: number;
-  new_price: number;
+  new_price: string;
   aftermarket_support: string;
   safety_rating: string;
   photos: Photo[];
@@ -74,7 +74,7 @@ export default function CarsPage() {
                   </div>
                   <div>
                     <p className="font-semibold">New Price:</p>
-                    <p>${car.new_price.toLocaleString()}</p>
+                    <p>${car.new_price}</p>
                   </div>
                   <div>
                     <p className="font-semibold">Aftermarket Support:</p>
@@ -87,12 +87,17 @@ export default function CarsPage() {
                 </div>
               </div>
               {car.photos[0] && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img 
-                  src={car.photos[0].url} 
-                  alt={`${car.make} ${car.model}`}
-                  className="w-full max-w-2xl rounded-lg shadow-lg"
-                />
+                <div className="w-full max-w-2xl">
+                  <img 
+                    src={car.photos[0].url} 
+                    alt={`${car.make} ${car.model}`}
+                    className="w-full h-auto rounded-lg shadow-lg object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'https://via.placeholder.com/600x400?text=Image+Not+Available';
+                    }}
+                  />
+                </div>
               )}
             </div>
           ))}
