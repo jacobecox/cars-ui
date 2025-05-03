@@ -15,23 +15,45 @@ interface Car {
   new_price: string;
   aftermarket_support: string;
   safety_rating: string;
-  photos: Photo[];
+}
+
+interface CarWithPhoto extends Car {
+  photo?: Photo;
 }
 
 export default function CarsPage() {
-  const [cars, setCars] = useState<Car[]>([]);
+  const [cars, setCars] = useState<CarWithPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCars = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cars`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch cars');
+        // Fetch cars and photos in parallel
+        const [carsResponse, photosResponse] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/cars`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/cars/photos`)
+        ]);
+
+        if (!carsResponse.ok || !photosResponse.ok) {
+          throw new Error('Failed to fetch data');
         }
-        const data = await response.json();
-        setCars(data);
+
+        const carsData = await carsResponse.json();
+        const photosData = await photosResponse.json();
+
+        // Match photos with cars based on the photo key containing the car ID
+        const carsWithPhotos = carsData.map((car: Car) => {
+          const matchingPhoto = photosData.find((photo: Photo) => 
+            photo.key.includes(car.id.toString())
+          );
+          return {
+            ...car,
+            photo: matchingPhoto
+          };
+        });
+
+        setCars(carsWithPhotos);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -39,7 +61,7 @@ export default function CarsPage() {
       }
     };
 
-    fetchCars();
+    fetchData();
   }, []);
 
   if (loading) {
@@ -86,10 +108,10 @@ export default function CarsPage() {
                   </div>
                 </div>
               </div>
-              {car.photos[0] && (
+              {car.photo && (
                 <div className="w-full max-w-2xl">
                   <img 
-                    src={car.photos[0].url} 
+                    src={`${process.env.NEXT_PUBLIC_API_URL}${car.photo.url}`}
                     alt={`${car.make} ${car.model}`}
                     className="w-full h-auto rounded-lg shadow-lg object-cover"
                     onError={(e) => {
